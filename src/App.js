@@ -1,25 +1,70 @@
-import logo from './logo.svg';
-import './App.css';
+//import React from "react";
+import "./App.css";
+import React, { Fragment } from "react";
+import ReactDOM from "react-dom";
+import { Designer, Viewer } from "@grapecity/activereports-react";
+import {dataSources,images} from "./resources";
+import { FontStore } from "@grapecity/activereports/core";
+import "@grapecity/activereports/pdfexport";
+import "@grapecity/activereports/htmlexport";
+import "@grapecity/activereports/tabulardataexport";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+  const [designerVisible, setDesignerVisible] = React.useState(true);
+  const viewerRef = React.useRef();
+  
+  function updateToolbar(){
+    var designButton = {
+      key: "$openDesigner",
+      text: "Edit in Designer",
+      iconCssClass: "mdi mdi-pencil",
+      enabled: true,
+      action: () => {
+        setDesignerVisible(true);
+      },
+    };
+    viewerRef.current.toolbar.addItem(designButton);
+    viewerRef.current.toolbar.updateLayout({
+      default: [
+        "$openDesigner",
+        "$split",
+        "$navigation",
+        "$split",
+        "$refresh",
+        "$split",
+        "$history",
+        "$split",
+        "$zoom",
+        "$fullscreen",
+        "$split",
+        "$print",
+        "$split",
+        "$singlepagemode",
+        "$continuousmode",
+        "$galleymode",
+      ],
+    });
+  }
+  
+  function onReportPreview(report){
+    updateToolbar();
+    setDesignerVisible(false);
+    viewerRef.current.open(report.definition);
+    return Promise.resolve();
+  }  
+    return (
+    <Fragment>
+    <div id="viewer-host" style={{ display: designerVisible ? "none" : "block" }}>
+      <Viewer ref={viewerRef} />
     </div>
-  );
+    <div id="designer-host" style={{ display: designerVisible ? "block" : "none" }}>
+      <Designer report={{id: "report.rdlx-json"}} dataSources={dataSources} imageList={images} onRender={onReportPreview}/>
+    </div>
+    </Fragment>);
 }
+
+FontStore.registerFonts("/activereportsjs/demos/resource/fontsConfig.json");
+ReactDOM.render(<App />, document.getElementById("root"));
+
 
 export default App;
